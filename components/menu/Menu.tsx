@@ -1,10 +1,14 @@
 import React from "react";
 import { Nav } from "../GlobalStyle";
-const Menu = ({ changeNav }: any) => {
+const Menu = ({ changeNav, setMusic }: any) => {
+  const handleClick = (v: string) => {
+    changeNav(v);
+    setMusic(true);
+  };
   return (
     <Nav>
-      <button onClick={() => changeNav("start")}>Start</button>
-      <button onClick={() => changeNav("settings")}>Settings</button>
+      <button onClick={() => handleClick("start")}>Start</button>
+      <button onClick={() => handleClick("settings")}>Settings</button>
     </Nav>
   );
 };

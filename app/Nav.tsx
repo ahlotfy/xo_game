@@ -15,9 +15,7 @@ const Nav = () => {
   const [active, setActive] = useState(0);
   const [runMusic, setMusic] = useState(false);
   const isMusic = useSelector((state: any) => state.soundReducer.isMusic);
-  document?.addEventListener("click", () => {
-    setMusic(true);
-  });
+
   const dispatch = useDispatch();
   const changeNav = (e: any) => {
     dispatch(setNav(e));
@@ -43,7 +41,7 @@ const Nav = () => {
           <Logo />
           <Content className={active == 1 ? "active" : ""}>
             {nav === "menu" ? (
-              <Menu changeNav={changeNav} />
+              <Menu changeNav={changeNav} setMusic={setMusic} />
             ) : nav === "start" ? (
               <Start changeNav={changeNav} />
             ) : nav === "settings" ? (
