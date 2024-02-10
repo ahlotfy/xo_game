@@ -14,6 +14,9 @@ const Buttons = styled.div`
     padding: 10px 20px;
     font-size: 18px;
     cursor: pointer;
+    :disabled {
+      cursor: default;
+    }
   }
 `;
 const Winner = styled.div`

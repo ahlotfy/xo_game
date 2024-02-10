@@ -13,6 +13,7 @@ const ModalSection = ({
   modalType,
   handleModalResponse,
   winner,
+  disabledNextGame,
 }: any) => {
   const dispatch = useDispatch();
   const handleCancel = () => {
@@ -44,6 +45,7 @@ const ModalSection = ({
           handleModalResponse={handleModalResponse}
           winner={winner}
           resetSessionStorage={resetSessionStorage}
+          disabledNextGame={disabledNextGame}
         />
       ) : modalType === "tied" ? (
         <TheMatchWasTied

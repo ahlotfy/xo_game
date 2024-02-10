@@ -13,7 +13,6 @@ import ModalSection from "./modal/ModalSection";
 import { useDispatch, useSelector } from "react-redux";
 import { setGamePause, setGameStart } from "@/redux/gameState/gameState";
 import wonFunction from "./wonFunction";
-import { setStartWithSymbol } from "@/redux/startWithSymbol/StartWithSymbol";
 import EazyLevel from "./difficultyLevelReducer/EazyLevel";
 import MediumLevel from "./difficultyLevelReducer/MediumLevel";
 import HardLevel from "./difficultyLevelReducer/HardLevel";
@@ -53,34 +52,17 @@ const Game = ({ changeNav }: any) => {
   const [runSoundClick, setRunSoundClick] = useState(false);
   const [runSoundWon, setRunSoundWon] = useState(false);
   const [score, setScore]: any = useState([{ x: 0, o: 0 }]);
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(false);
   const [whoWon, setWhoWon] = useState("");
   const [data, setData]: any = useState([]);
   const [botSymbol, setBotSymbol] = useState("");
   const [playerSymbol, setPlayerSymbol] = useState("");
   const key: any = sessionStorage.getItem("score");
+  const [disabledNextGame, setDisabledNextGame] = useState(true);
   const timerId: any = useRef();
+  const botId: any = useRef();
   const handleDisabled = playing || gameStart == false;
   const getFromSessionStorage = JSON.parse(key);
-  const handleBotSteps =
-    whoWon == "computer"
-      ? [1, 3, 5, 7, 9].includes(steps)
-      : [2, 4, 6, 8].includes(steps);
-  const handleKeys = (step: number) => {
-    if (startWithSymbol === "x") {
-      if (step == 1 || step == 3 || step == 5 || step == 7 || step == 9) {
-        return "X";
-      } else {
-        return "O";
-      }
-    } else {
-      if (step == 1 || step == 3 || step == 5 || step == 7 || step == 9) {
-        return "O";
-      } else {
-        return "X";
-      }
-    }
-  };
   const formatTime = (time: number) => {
     let min: number | string = Math.floor(time / 60);
     let sec: number | string = Math.floor(time - min * 60);
@@ -112,24 +94,27 @@ const Game = ({ changeNav }: any) => {
     if (steps === 10) {
       setSteps(1);
     } else {
-      if (selected.includes(n) === false) {
+      if (selected.includes(n) === false && gameStart) {
         setCountDownTimer(countDown);
         setSteps((prev) => prev + 1);
         setSelected((prev: any) => [...prev, n]);
-        setData((prev: any) => [...prev, { id: n, symbol: handleKeys(steps) }]);
-        setCurrentSymbol((prev) => (prev === "x" ? "o" : "x"));
+        setData((prev: any) => [...prev, { id: n, symbol: currentSymbol }]);
+        setCurrentSymbol((prev) => (prev === "X" ? "O" : "X"));
       }
     }
   };
   const handleWon = (winner: string) => {
     setPlaying(true);
     handleSoundWon();
-    dispatch(setStartWithSymbol(winner));
     dispatch(setGameStart(false));
     setModalType("won");
     setWinner(winner);
+    setCurrentSymbol(winner);
     setIsModalOpen(true);
-    setCurrentSymbol("");
+    setDisabledNextGame(true);
+    setTimeout(() => {
+      setDisabledNextGame(false);
+    }, 2500);
     if (startWithSymbol == winner) {
       setWhoWon("player");
     } else {
@@ -144,18 +129,23 @@ const Game = ({ changeNav }: any) => {
         },
       ])
     );
-    setScore((prev: any) => [
+    setScore([
       {
-        x: winner == "X" ? prev[0].x + 1 : prev[0].x,
-        o: winner == "O" ? prev[0].o + 1 : prev[0].o,
+        x: winner == "X" ? score[0]?.x + 1 : score[0].x,
+        o: winner == "O" ? score[0]?.o + 1 : score[0].o,
       },
     ]);
+    return () => clearTimeout(botId?.current);
   };
   const handleTied = () => {
     dispatch(setGameStart(false));
     setModalType("tied");
     setIsModalOpen(true);
-    setCurrentSymbol("");
+    if (score[0].x == 0 && score[0].o == 0) {
+      setCurrentSymbol(startWithSymbol);
+    } else if (winner != "") {
+      setCurrentSymbol(winner);
+    }
   };
   const keysId = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const handleModalResponse = (v: string) => {
@@ -165,12 +155,10 @@ const Game = ({ changeNav }: any) => {
     } else {
       setData([]);
       setSelected([]);
-      setCurrentSymbol(startWithSymbol);
       setSteps(1);
       setCountDownTimer(countDown);
       dispatch(setGameStart(true));
       setModalType("");
-      setWinner("");
       setIsModalOpen(false);
     }
   };
@@ -199,8 +187,8 @@ const Game = ({ changeNav }: any) => {
   useEffect(() => {
     if (steps == 10) {
       dispatch(setGameStart(false));
-      setCurrentSymbol("");
       handleTied();
+      setSteps(1);
     }
   }, [steps]);
 
@@ -234,49 +222,67 @@ const Game = ({ changeNav }: any) => {
   }, [data]);
 
   useEffect(() => {
-    if (playWith == "computer" && handleBotSteps) {
-      setPlaying(true);
-      setCountDownTimer(countDown);
-      setTimeout(() => {
-        handleSoundClick();
-        setSteps((prev) => prev + 1);
-        setCurrentSymbol((prev) => (prev === "x" ? "o" : "x"));
-        if (difficultyLevel == "easy") {
-          setSelected((prev: any) => [...prev, EazyLevel(data)]);
-          setData((prev: any) => [
-            ...prev,
-            { id: EazyLevel(data), symbol: handleKeys(steps) },
-          ]);
-        } else if (difficultyLevel == "medium") {
-          setSelected((prev: any) => [
-            ...prev,
-            MediumLevel(data, playerSymbol),
-          ]);
-          setData((prev: any) => [
-            ...prev,
-            {
-              id: MediumLevel(data, playerSymbol),
-              symbol: handleKeys(steps),
-            },
-          ]);
-        } else if (difficultyLevel == "hard") {
-          setSelected((prev: any) => [
-            ...prev,
-            HardLevel(data, botSymbol, playerSymbol),
-          ]);
-          setData((prev: any) => [
-            ...prev,
-            {
-              id: HardLevel(data, botSymbol, playerSymbol),
-              symbol: handleKeys(steps),
-            },
-          ]);
-        }
-      }, 3000);
+    if (playWith == "computer" && gameStart) {
+      if (
+        (whoWon == "computer" && [1, 3, 5, 7, 9].includes(steps)) ||
+        (whoWon == "player" && [2, 4, 6, 8].includes(steps)) ||
+        (whoWon == "" && [2, 4, 6, 8].includes(steps))
+      ) {
+        setPlaying(true);
+        botId.current = setTimeout(() => {
+          setCountDownTimer(countDown);
+          handleSoundClick();
+          setSteps((prev) => prev + 1);
+          setCurrentSymbol((prev) => (prev === "X" ? "O" : "X"));
+          if (difficultyLevel == "easy") {
+            setSelected((prev: any) => [...prev, EazyLevel(data)]);
+            setData((prev: any) => [
+              ...prev,
+              { id: EazyLevel(data), symbol: currentSymbol },
+            ]);
+          } else if (difficultyLevel == "medium") {
+            setSelected((prev: any) => [
+              ...prev,
+              MediumLevel(data, playerSymbol),
+            ]);
+            setData((prev: any) => [
+              ...prev,
+              {
+                id: MediumLevel(data, playerSymbol),
+                symbol: currentSymbol,
+              },
+            ]);
+          } else if (difficultyLevel == "hard") {
+            setSelected((prev: any) => [
+              ...prev,
+              HardLevel(data, botSymbol, playerSymbol),
+            ]);
+            setData((prev: any) => [
+              ...prev,
+              {
+                id: HardLevel(data, botSymbol, playerSymbol),
+                symbol: currentSymbol,
+              },
+            ]);
+          }
+        }, 1500);
+      } else {
+        setPlaying(false);
+      }
     } else {
       setPlaying(false);
     }
-  }, [playWith, steps]);
+  }, [
+    playWith,
+    whoWon,
+    difficultyLevel,
+    data,
+    countDown,
+    playerSymbol,
+    botSymbol,
+    gameStart,
+    botId,
+  ]);
 
   useEffect(() => {
     const RandomNum = keysId.filter((e) => !selected.includes(e))[
@@ -293,7 +299,7 @@ const Game = ({ changeNav }: any) => {
         ...prev,
         {
           id: RandomNum,
-          symbol: handleKeys(steps),
+          symbol: currentSymbol,
         },
       ]);
     }
@@ -307,6 +313,7 @@ const Game = ({ changeNav }: any) => {
         modalType={modalType}
         handleModalResponse={handleModalResponse}
         winner={winner}
+        disabledNextGame={disabledNextGame}
       />
       <Header>
         <GameDetials>

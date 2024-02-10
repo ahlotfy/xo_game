@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Title, Buttons, Winner } from "./ModalSectionStyle";
 import { Image } from "antd";
 import crown from "../../../imgs/crown.png";
@@ -7,6 +7,7 @@ const Won = ({
   handleModalResponse,
   winner,
   resetSessionStorage,
+  disabledNextGame,
 }: any) => {
   return (
     <div>
@@ -24,7 +25,10 @@ const Won = ({
         >
           Menu
         </button>
-        <button onClick={() => handleModalResponse("next_game")}>
+        <button
+          onClick={() => handleModalResponse("next_game")}
+          disabled={disabledNextGame}
+        >
           Next Game
         </button>
       </Buttons>
