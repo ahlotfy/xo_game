@@ -1,7 +1,7 @@
 import React from "react";
 import { Title, Buttons, Winner } from "./ModalSectionStyle";
 import { Image } from "antd";
-import Crown from "../../../imgs/Crown.png";
+import crown from "../../../imgs/crown.png";
 const Won = ({
   changeNav,
   handleModalResponse,
@@ -11,7 +11,7 @@ const Won = ({
   return (
     <div>
       <Winner>
-        <Image src={Crown?.src} loading="lazy" preview={false} />
+        <Image src={crown?.src} loading="lazy" preview={false} />
         <p>{winner}</p>
       </Winner>
       <Title>Won</Title>
